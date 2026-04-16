@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #f7f5f2;
+  color: #1c1c1c;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.hero-type-row {
+  display: block;
+  width: 100%;
+}
+
+.type-line {
+  display: inline-block;
+  position: relative;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.type-line::after {
+  content: '';
+  position: absolute;
+  inset: -0.04em -0.08em -0.08em 0;
+  background: #f7f5f2;
+  border-left: 0.08em solid rgba(28, 28, 28, 0.65);
+  animation:
+    type-cover 2s steps(30, end) forwards,
+    caret-blink 0.8s step-end infinite,
+    caret-hide 0.01s linear forwards;
+}
+
+.type-line-text {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.type-line-first::after {
+  animation-delay: 0s, 0s, 2s;
+}
+
+.type-line-second::after {
+  animation-delay: 2s, 2s, 4s;
+}
+
+@keyframes type-cover {
+  from {
+    inset: -0.04em -0.08em -0.08em 0;
+  }
+
+  to {
+    inset: -0.04em -0.08em -0.08em 100%;
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  50% {
+    border-color: rgba(28, 28, 28, 0.65);
+  }
+
+  51%,
+  100% {
+    border-color: transparent;
+  }
+}
+
+@keyframes caret-hide {
+  to {
+    border-right-color: transparent;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-type-row {
+    width: 100%;
+  }
+
+  .type-line {
+    white-space: normal;
+  }
+
+  .type-line::after {
+    display: none;
+  }
+}
