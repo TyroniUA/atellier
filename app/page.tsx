@@ -3,16 +3,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { HeroScrollTunnel } from '@/components/hero-scroll-tunnel';
 import { Button } from '@/components/ui/button';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
   visible: { opacity: 1, y: 0 },
-};
-
-const heroLineMotion = {
-  hidden: { opacity: 0, y: 56, scale: 0.88 },
-  visible: { opacity: 1, y: 0, scale: 1 },
 };
 
 export default function BoutiqueAgencyLanding() {
@@ -30,52 +26,9 @@ export default function BoutiqueAgencyLanding() {
       </header>
 
       <main className="pt-32">
-        <section className="relative mx-auto flex min-h-[90vh] max-w-6xl flex-col items-center justify-center px-6 text-center">
-          <motion.div
-            initial={false}
-            viewport={{ once: true }}
-            className="w-full md:w-[68vw] md:max-w-none"
-          >
-            <h1 className="flex flex-col items-center text-[clamp(2.5rem,5.1vw,5rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-balance">
-              <motion.span
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={heroLineMotion}
-                transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
-                className="hero-type-row"
-              >
-                <span className="type-line type-line-first">
-                  <span className="type-line-text">
-                    <span>We don’t take </span>
-                    <span className="text-[0.94em] text-[#C9772B]">clients.</span>
-                  </span>
-                </span>
-              </motion.span>
-              <motion.span
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={heroLineMotion}
-                transition={{ duration: 2, delay: 2, ease: [0.22, 1, 0.36, 1] }}
-                className="hero-type-row mt-2 md:mt-3"
-              >
-                <span className="type-line type-line-second">
-                  <span className="type-line-text">
-                    <span>We take </span>
-                    <span className="text-[1.02em] uppercase tracking-[0.02em] text-[#2E8B57]">responsibility.</span>
-                  </span>
-                </span>
-              </motion.span>
-            </h1>
+        <HeroScrollTunnel />
 
-            <p className="mt-8 text-lg text-[#6B6B6B]">
-              Every engagement is a long-term commitment — to your goals, your people, and your future.
-            </p>
-          </motion.div>
-        </section>
-
-        <section id="principles" className="mx-auto mt-20 max-w-5xl px-6 text-center">
+        <section id="principles" className="mx-auto mt-12 max-w-5xl scroll-mt-28 px-6 text-center md:mt-16">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
             <h2 className="text-3xl font-semibold sm:text-4xl">Our principles</h2>
             <p className="mx-auto mt-6 max-w-2xl text-[#6B6B6B]">
