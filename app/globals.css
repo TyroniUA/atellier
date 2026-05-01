@@ -10,7 +10,7 @@
 }
 
 html {
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
   scroll-behavior: smooth;
 }
 
@@ -27,4 +27,8 @@ body {
   scroll-snap-align: start;
   width: 100%;
   min-height: 100vh;
+}
+
+.noSnap {
+  scroll-snap-align: none;
 }

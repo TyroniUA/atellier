@@ -65,6 +65,7 @@ export type HeroAnimationElements = {
 export type HeroAnimationOptions = {
   gridUrl?: string;
   reducedMotion?: boolean;
+  onMorphProgress?: (progress: number) => void;
 };
 
 type PhaseKey =
@@ -86,7 +87,7 @@ export function initHeroAnimation(
   initialTweaks: Tweaks,
   options: HeroAnimationOptions = {},
 ): () => void {
-  const { gridUrl = "/assets/portrait-grid.json", reducedMotion = false } = options;
+  const { gridUrl = "/assets/portrait-grid.json", onMorphProgress, reducedMotion = false } = options;
 
   const {
     canvas,
@@ -224,11 +225,6 @@ export function initHeroAnimation(
     return PHASES.find((p) => p.k === key) ?? PHASES[0];
   }
 
-  function phaseProgress(key: PhaseKey, t: number) {
-    const p = phaseAt(key);
-    return clamp((t - p.at) / (p.to - p.at), 0, 1);
-  }
-
   function phaseActive(t: number): Phase {
     for (let i = PHASES.length - 1; i >= 0; i--) if (t >= PHASES[i].at) return PHASES[i];
     return PHASES[0];
@@ -244,6 +240,31 @@ export function initHeroAnimation(
     outQuart: (t: number) => 1 - Math.pow(1 - t, 4),
     inCubic: (t: number) => t * t * t,
   };
+
+  /** Slow start, strong mid push, soft landing — reads as “streaming” bits. */
+  function streamFillProgress(u: number) {
+    u = clamp(u, 0, 1);
+    if (u < 0.42) {
+      const k = u / 0.42;
+      return ease.inCubic(k) * 0.22;
+    }
+    const k = (u - 0.42) / 0.58;
+    return 0.22 + ease.outCubic(k) * 0.78;
+  }
+
+  /** Deterministic [0,1] stagger key: radial from portrait center + mild cell hash. */
+  function cellStagger01(i: number, cols: number, pb: PortraitBox) {
+    const gx = i % cols;
+    const gy = Math.floor(i / cols);
+    const cx = pb.x + gx * pb.cellW + pb.cellW / 2;
+    const cy = pb.y + gy * pb.cellH + pb.cellH / 2;
+    const nx = (cx - (pb.x + pb.w / 2)) / (pb.w / 2 || 1);
+    const ny = (cy - (pb.y + pb.h / 2)) / (pb.h / 2 || 1);
+    const dist = Math.sqrt(nx * nx + ny * ny);
+    const h = ((gx * 73856093) ^ (gy * 19349663)) >>> 0;
+    const jitter = (h % 1000) / 1000;
+    return clamp(dist / 1.45 + jitter * 0.14, 0, 1);
+  }
 
   let t0 = performance.now();
   let paused = false;
@@ -374,15 +395,17 @@ export function initHeroAnimation(
   }
 
   // Continuous fractional typed-count. Chars fade in as this crosses integer boundaries.
-  function typedContinuous(t: number, N: number): number {
-    if (t < 0.15) return 0;
-    if (t < 0.9) return clamp((t - 0.15) / 0.35, 0, 1);
-    if (t < 1.1) return 1 + (t - 0.9) / 0.2;
-    if (t < 1.6) return 2;
-    if (t < 4.2) {
-      const local = (t - 1.6) / (4.2 - 1.6);
-      const curved = Math.pow(local, 1.5);
-      return 2 + (N - 2) * curved;
+  function typedContinuous(t: number, N: number) {
+    const fillStart = phaseAt("fill").at;
+    if (t < 0.05) return 0;
+    if (t < 0.38) return ease.outCubic(clamp((t - 0.05) / 0.33, 0, 1));
+    if (t < 0.78) return 1;
+    if (t < 1.2) return 1 + ease.inOutCubic(clamp((t - 0.78) / 0.42, 0, 1));
+    if (t < fillStart) return 2;
+    const fillEnd = phaseAt("fill").to;
+    if (t < fillEnd) {
+      const local = (t - fillStart) / (fillEnd - fillStart);
+      return 2 + (N - 2) * streamFillProgress(local);
     }
     return N;
   }
@@ -418,13 +441,83 @@ export function initHeroAnimation(
     };
   }
 
+  function drawIntroCaret(t: number, typedF: number) {
+    if (reducedMotion || t >= phaseAt("fill").at || typedF >= 2 || !PORTRAIT_BOX) return;
+    const L = computeBigLayout(2);
+    const fontPx = Math.max(6, Math.round(L.cellW * 0.92));
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `500 ${fontPx}px "JetBrains Mono", ui-monospace, monospace`;
+    const idx = Math.min(1, Math.floor(typedF));
+    const bc = idx % L.cols;
+    const br = Math.floor(idx / L.cols);
+    const bx = L.x0 + bc * L.cellW + L.cellW / 2;
+    const by = L.y0 + br * L.cellH + L.cellH / 2;
+    const caretX = bx + L.cellW * 0.48;
+    const caretY = by;
+    const blink = 0.32 + 0.68 * (Math.sin(t * Math.PI * 2.75) * 0.5 + 0.5);
+    ctx.fillStyle = getInk();
+    ctx.globalAlpha = blink;
+    const cw = Math.max(2, fontPx * 0.11);
+    const ch = fontPx * 0.72;
+    ctx.fillRect(caretX - cw / 2, caretY - ch / 2, cw, ch);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawResolveGrain(t: number) {
+    if (reducedMotion || !PORTRAIT_BOX) return;
+    if (t < phaseAt("resolve").at || t >= phaseAt("morphIn").at) return;
+    const pb = PORTRAIT_BOX;
+    const tick = Math.floor(t * 45);
+    ctx.save();
+    ctx.globalAlpha = 0.028;
+    ctx.fillStyle = getInk();
+    for (let k = 0; k < 96; k++) {
+      const r = ((tick * 1103515245 + k * 12345) >>> 0) / 4294967296;
+      const q = ((tick * 2246822519 + k * 3266489917) >>> 0) / 4294967296;
+      const rx = pb.x + r * pb.w;
+      const ry = pb.y + q * pb.h;
+      ctx.fillRect(Math.floor(rx), Math.floor(ry), 1, 1);
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  function clipRoundedPortraitBox(pb: PortraitBox, radius: number) {
+    const r = Math.min(radius, pb.w / 2, pb.h / 2);
+    ctx.beginPath();
+    ctx.moveTo(pb.x + r, pb.y);
+    ctx.lineTo(pb.x + pb.w - r, pb.y);
+    ctx.quadraticCurveTo(pb.x + pb.w, pb.y, pb.x + pb.w, pb.y + r);
+    ctx.lineTo(pb.x + pb.w, pb.y + pb.h - r);
+    ctx.quadraticCurveTo(pb.x + pb.w, pb.y + pb.h, pb.x + pb.w - r, pb.y + pb.h);
+    ctx.lineTo(pb.x + r, pb.y + pb.h);
+    ctx.quadraticCurveTo(pb.x, pb.y + pb.h, pb.x, pb.y + pb.h - r);
+    ctx.lineTo(pb.x, pb.y + r);
+    ctx.quadraticCurveTo(pb.x, pb.y, pb.x + r, pb.y);
+    ctx.closePath();
+    ctx.clip();
+  }
+
   function drawLeftSequence(t: number) {
     if (!PORTRAIT_BOX || !PIXELS.length) return;
     const N = PIXELS.length;
+    const pb = PORTRAIT_BOX;
+    const cols = pb.cols;
+
+    ctx.save();
+    clipRoundedPortraitBox(pb, 16);
 
     const typedF = typedContinuous(t, N);
     const typedVisible = Math.min(N, Math.ceil(typedF));
-    if (typedVisible === 0) return;
+
+    drawIntroCaret(t, typedF);
+    if (typedVisible === 0) {
+      ctx.restore();
+      return;
+    }
 
     // Big → grid interpolation spans the fill phase. Cap at 1 after fill.
     const fill = phaseAt("fill");
@@ -451,6 +544,8 @@ export function initHeroAnimation(
     const fontPx = Math.max(6, Math.round(gSize * 0.92));
     ctx.font = `500 ${fontPx}px "JetBrains Mono", ui-monospace, monospace`;
 
+    const inFillGlyphs = t >= fill.at && t < fill.to;
+
     for (let i = 0; i < typedVisible; i++) {
       const pxCell = PIXELS[i];
       const bit = MESSAGE_BITS[i % MESSAGE_BITS.length];
@@ -463,17 +558,28 @@ export function initHeroAnimation(
       const gx = bx + (pxCell.cx - bx) * blend;
       const gy = by + (pxCell.cy - by) * blend;
 
-      const age = typedF - i;
-      const alpha = ease.outCubic(clamp(age, 0, 1));
+      let gyGlyph = gy;
+      if (inFillGlyphs && blend < 0.97) {
+        const ripple = Math.sin(t * 2.55 + i * 0.065 + br * 0.12) * 1.85 * (1 - blend);
+        gyGlyph += ripple;
+      }
 
-      const cellAt = pix.at + (i / Math.max(1, N - 1)) * staggerSpan;
+      const age = typedF - i;
+      const alpha =
+        i === 0 && typedF < 1
+          ? ease.outCubic(clamp(typedF, 0, 1))
+          : ease.outCubic(clamp(age, 0, 1));
+
+      const staggerKey = cellStagger01(i, cols, pb);
+      const cellAt = pix.at + staggerKey * staggerSpan;
       const cellP = clamp((t - cellAt) / perCellWindow, 0, 1);
       const glyphA = 1 - ease.outCubic(cellP);
-      const squareA = ease.outCubic(cellP);
+      const squareA = ease.inOutCubic(cellP);
+      const sqScale = 0.92 + 0.08 * ease.inOutCubic(cellP);
 
       if (glyphA > 0.01 && alpha > 0.01) {
         ctx.globalAlpha = glyphA * alpha;
-        ctx.fillText(bit, gx, gy);
+        ctx.fillText(bit, gx, gyGlyph);
       }
 
       if (squareA > 0.01) {
@@ -483,22 +589,64 @@ export function initHeroAnimation(
         const fb = pxCell.fb ?? pxCell.b;
         ctx.fillStyle = `rgb(${fr},${fg},${fb})`;
         const s = Math.max(1, pxCell.w * 0.99);
-        ctx.fillRect(pxCell.cx - s / 2, pxCell.cy - s / 2, s, s);
+        ctx.save();
+        ctx.translate(pxCell.cx, pxCell.cy);
+        ctx.scale(sqScale, sqScale);
+        ctx.fillRect(-s / 2, -s / 2, s, s);
+        ctx.restore();
         ctx.fillStyle = getInk();
       }
     }
 
     ctx.restore();
     ctx.globalAlpha = 1;
+    drawResolveGrain(t);
+    ctx.restore();
   }
 
-  // Drive the right-side DOM morph through CSS stage classes.
+  // Drive the right-side SVG morph: stage classes (layout) + data layers (which keyframe shows).
   function applyRightStages(t: number) {
     const inMorph = t >= phaseAt("morphIn").at;
+    const morphStart = phaseAt("morphIn").at;
+    const morphEnd = phaseAt("end").at;
+    onMorphProgress?.(inMorph ? clamp((t - morphStart) / (morphEnd - morphStart), 0, 1) : 0);
+
     rightSlot.classList.toggle("show", inMorph);
     rightSlot.classList.toggle("stageStack", t >= phaseAt("morphStack").at);
     rightSlot.classList.toggle("stageDot", t >= phaseAt("morphDot").at);
     rightSlot.classList.toggle("stageI", t >= phaseAt("morphI").at);
+
+    if (!inMorph) {
+      rightSlot.removeAttribute("data-z-layer");
+      rightSlot.removeAttribute("data-one-layer");
+      return;
+    }
+
+    const ms = phaseAt("morphStack").at;
+    const md = phaseAt("morphDot").at;
+    const mI = phaseAt("morphI").at;
+
+    let zLayer: string;
+    let oneLayer: string;
+
+    if (t < ms) {
+      zLayer = "0";
+      oneLayer = "0";
+    } else if (t < md) {
+      zLayer = "1";
+      oneLayer = "0";
+    } else if (t < mI) {
+      const u = (t - md) / (mI - md);
+      const k = Math.min(3, Math.floor(u * 4));
+      zLayer = String(2 + k);
+      oneLayer = "0";
+    } else {
+      zLayer = "5";
+      oneLayer = "1";
+    }
+
+    rightSlot.dataset.zLayer = zLayer;
+    rightSlot.dataset.oneLayer = oneLayer;
   }
 
   function renderAt(t: number) {
@@ -523,6 +671,8 @@ export function initHeroAnimation(
   function start() {
     t0 = performance.now();
     rightSlot.classList.remove("show", "stageStack", "stageDot", "stageI");
+    rightSlot.removeAttribute("data-z-layer");
+    rightSlot.removeAttribute("data-one-layer");
     replayBtn.classList.remove("show");
     rafId = requestAnimationFrame(frame);
   }

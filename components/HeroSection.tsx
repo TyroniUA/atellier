@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { DEFAULT_TWEAKS, initHeroAnimation } from "@/lib/hero-animation";
+import { HeroMorphSequence, type HeroMorphSequenceHandle } from "./HeroMorphSequence";
 import styles from "./HeroSection.module.css";
+
+const HERO_HEADER_BINARY = "01001000 · 01101001";
 
 function subscribeReducedMotion(onChange: () => void) {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -39,6 +42,38 @@ export function HeroSection() {
   const tDensityVRef = useRef<HTMLSpanElement>(null);
   const tSpeedVRef = useRef<HTMLSpanElement>(null);
   const tBgVRef = useRef<HTMLSpanElement>(null);
+  const headerBinaryRef = useRef<HTMLDivElement>(null);
+  const morphRef = useRef<HeroMorphSequenceHandle>(null);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      const el = headerBinaryRef.current;
+      if (el) el.textContent = HERO_HEADER_BINARY;
+      return;
+    }
+    const el = headerBinaryRef.current;
+    if (!el) return;
+    el.textContent = HERO_HEADER_BINARY;
+    let ticksToReset = 0;
+    const id = window.setInterval(() => {
+      const node = headerBinaryRef.current;
+      if (!node) return;
+      ticksToReset++;
+      if (ticksToReset >= 9 || Math.random() < 0.12) {
+        node.textContent = HERO_HEADER_BINARY;
+        ticksToReset = 0;
+        return;
+      }
+      const parts = HERO_HEADER_BINARY.split(" · ");
+      const w = Math.random() < 0.5 ? 0 : 1;
+      const chars = parts[w].split("");
+      const idx = Math.floor(Math.random() * chars.length);
+      chars[idx] = chars[idx] === "0" ? "1" : "0";
+      parts[w] = chars.join("");
+      node.textContent = `${parts[0]} · ${parts[1]}`;
+    }, 520);
+    return () => clearInterval(id);
+  }, [reducedMotion]);
 
   useEffect(() => {
     if (
@@ -78,7 +113,10 @@ export function HeroSection() {
         tBgV: tBgVRef.current,
       },
       DEFAULT_TWEAKS,
-      { reducedMotion },
+      {
+        onMorphProgress: (progress) => morphRef.current?.setProgress(progress),
+        reducedMotion,
+      },
     );
   }, [reducedMotion]);
 
@@ -87,12 +125,23 @@ export function HeroSection() {
       <div className={styles.stage} ref={stageRef}>
         <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
 
+        <div className={styles.landingText} aria-labelledby="hero-heading">
+          <p className={styles.kicker}>iTelier / Your software partner</p>
+          <h1 id="hero-heading" className={styles.title}>
+            We invest not in projects but in relationships.
+          </h1>
+          <p className={styles.subtitle}>
+            From zeros and ones to a human gaze - careful product, trust, and AI work for founders
+            building what should last.
+          </p>
+        </div>
+
         <div className={`${styles.rail} ${styles.railTop}`}>
           <div>
             <span className={styles.dot} />
-            Section 00 / Hero
+            iTelier
           </div>
-          <div>01001000 · 01101001</div>
+          <div ref={headerBinaryRef}>{HERO_HEADER_BINARY}</div>
         </div>
         <div className={`${styles.rail} ${styles.railBot}`}>
           <div ref={railStageRef}>stage · intro</div>
@@ -100,12 +149,7 @@ export function HeroSection() {
         </div>
 
         <div ref={rightSlotRef} className={styles.rightSlot} aria-hidden="true">
-          <div className={styles.morph}>
-            <span className={styles.glyphZero}>0</span>
-            <span className={styles.glyphOne}>1</span>
-            <span className={styles.dot} />
-            <span className={styles.stem} />
-          </div>
+          <HeroMorphSequence ref={morphRef} compact autoPlay={false} />
         </div>
 
         <button

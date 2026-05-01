@@ -1,0 +1,128 @@
+.root {
+  width: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  border-top: 1px solid var(--rule);
+  padding: clamp(40px, 6vw, 64px) clamp(28px, 5vw, 48px) 28px;
+}
+
+.grid {
+  max-width: min(1080px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 48px);
+  padding-bottom: 36px;
+}
+
+.brand {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+
+.tagline {
+  margin: 0;
+  font-size: clamp(15px, 1.4vw, 17px);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 28em;
+}
+
+.colTitle {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav a {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  width: fit-content;
+  transition: color 180ms, border-color 180ms;
+}
+
+.nav a:hover {
+  color: var(--accent-1);
+  border-bottom-color: var(--accent-1);
+}
+
+.contactLine {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.contactLine a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.contactLine a:hover {
+  color: var(--accent-1);
+}
+
+.social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.social a {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.social a:hover {
+  color: var(--accent-1);
+}
+
+.bottom {
+  max-width: min(1080px, 100%);
+  margin: 0 auto;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.binary {
+  letter-spacing: 0.18em;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
