@@ -1,0 +1,57 @@
+.stage {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 36px;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
+.railTop {
+  top: 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.railBot {
+  bottom: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.heading {
+  font-family: var(--font-instrument-serif), serif;
+  font-weight: 400;
+  font-size: clamp(40px, 6vw, 96px);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-align: center;
+  margin: 0;
+  max-width: 20ch;
+  text-wrap: balance;
+}

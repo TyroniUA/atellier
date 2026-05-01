@@ -1,0 +1,30 @@
+:root {
+  --bg: #f5ece2;
+  --ink: #1c140e;
+  --ink-soft: #5b4637;
+  --accent-1: #e8693c;
+  --accent-2: #d94a6a;
+  --accent-3: #f2a65a;
+  --accent-4: #8b2a3a;
+  --rule: rgba(28, 20, 14, 0.14);
+}
+
+html {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-instrument-serif), ui-serif, serif;
+}
+
+.snapSection {
+  scroll-snap-align: start;
+  width: 100%;
+  min-height: 100vh;
+}

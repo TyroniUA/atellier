@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Section 0 — Hero</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Warm oranges/pinks palette */
+    --bg:        #f5ece2;   /* warm cream */
+    --ink:       #1c140e;   /* warm near-black */
+    --ink-soft:  #5b4637;
+    --accent-1:  #e8693c;   /* orange */
+    --accent-2:  #d94a6a;   /* pink */
+    --accent-3:  #f2a65a;   /* soft amber */
+    --accent-4:  #8b2a3a;   /* deep rose */
+    --rule:      rgba(28,20,14,0.14);
+  }
+  html, body { margin:0; padding:0; background: var(--bg); color: var(--ink); font-family: 'Instrument Serif', serif; overflow: hidden; }
+  body { min-height: 100vh; }
+
+  .stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Top/bottom chrome — editorial rails */
+  .rail {
+    position: absolute; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .rail.top { top: 0; border-bottom: 1px solid var(--rule); }
+  .rail.bot { bottom: 0; border-top: 1px solid var(--rule); }
+  .rail .dot { width:6px; height:6px; border-radius:50%; background: var(--accent-1); display: inline-block; margin-right:8px; vertical-align: middle; }
+
+  canvas#anim {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+
+  /* Right-side reserved area placeholder (kept empty per user) */
+  .right-slot {
+    position: absolute;
+    top: 50%;
+    right: 6vw;
+    transform: translateY(-50%);
+    width: 38vw;
+    max-width: 720px;
+    opacity: 0;
+    transition: opacity 600ms ease 200ms;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .right-slot.show { opacity: 1; }
+  .right-slot .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-1);
+    margin-bottom: 24px;
+  }
+  .right-slot h1 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(48px, 6vw, 104px);
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+    margin: 0 0 28px 0;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .right-slot h1 em { font-style: italic; color: var(--accent-1); }
+  .right-slot p {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(18px, 1.35vw, 24px);
+    line-height: 1.45;
+    color: var(--ink-soft);
+    max-width: 48ch;
+    margin: 0 0 36px 0;
+  }
+  .right-slot .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex; gap: 22px; align-items: center;
+  }
+  .right-slot .meta span.bar { width: 28px; height: 1px; background: var(--ink-soft); display: inline-block; }
+
+  /* Replay */
+  .replay {
+    position: absolute;
+    right: 28px; bottom: 56px;
+    z-index: 6;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 10px 16px 10px 14px;
+    display: inline-flex; align-items: center; gap: 10px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 400ms ease, background 200ms, border-color 200ms;
+  }
+  .replay.show { opacity: 1; }
+  .replay:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .replay svg { width: 12px; height: 12px; }
+
+  /* Tweaks panel */
+  .tweaks {
+    position: fixed;
+    right: 24px; top: 64px;
+    width: 300px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 16px 18px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    box-shadow: 0 20px 40px -20px rgba(28,20,14,0.25);
+    z-index: 30;
+    display: none;
+  }
+  .tweaks.show { display: block; }
+  .tweaks h3 {
+    margin: 0 0 12px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .tweaks label { display: block; margin: 10px 0 4px; color: var(--ink-soft); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .tweaks .row { display:flex; align-items: center; gap: 8px; }
+  .tweaks select, .tweaks input[type="text"], .tweaks input[type="color"] {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 6px 8px;
+    background: #fff7ee;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    color: var(--ink);
+  }
+  .tweaks input[type="range"] { width: 100%; accent-color: var(--accent-1); }
+  .tweaks .chk { display:flex; align-items: center; gap: 8px; }
+  .tweaks .val { font-size: 10px; color: var(--ink-soft); }
+
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <canvas id="anim"></canvas>
+
+  <div class="rail top">
+    <div><span class="dot"></span>Section 00 / Hero</div>
+    <div>01001000 · 01101001</div>
+  </div>
+  <div class="rail bot">
+    <div id="railStage">stage · intro</div>
+    <div>Warm / 0.1</div>
+  </div>
+
+  <div class="right-slot" id="rightSlot">
+    <div class="eyebrow">— Placeholder —</div>
+    <h1 id="headline">From <em>zeros and ones</em> to a human gaze.</h1>
+    <p>Right-side copy lives here. Swap the headline in Tweaks; full treatment comes later.</p>
+    <div class="meta"><span>Scroll</span><span class="bar"></span><span>Next · 01</span></div>
+  </div>
+
+  <button class="replay" id="replay" title="Replay">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    Replay
+  </button>
+</div>
+
+<div class="tweaks" id="tweaks">
+  <h3>Tweaks <span class="val" id="tStatus"></span></h3>
+
+  <label>Palette</label>
+  <select id="tPalette">
+    <option value="warm">Warm oranges / pinks</option>
+    <option value="full">Full color (Vermeer)</option>
+    <option value="duotone">Duotone (pink + ink)</option>
+    <option value="mono">Mono amber</option>
+    <option value="cool">Cool blues</option>
+  </select>
+
+  <label>Grid density <span class="val" id="tDensityV"></span></label>
+  <input type="range" id="tDensity" min="40" max="120" step="4" value="100">
+
+  <label>Animation speed <span class="val" id="tSpeedV"></span></label>
+  <input type="range" id="tSpeed" min="0.4" max="2" step="0.1" value="1">
+
+  <label>Headline</label>
+  <input type="text" id="tHeadline" value="From zeros and ones to a human gaze.">
+
+  <label>Background</label>
+  <div class="row">
+    <input type="color" id="tBg" value="#f5ece2">
+    <span class="val" id="tBgV">#f5ece2</span>
+  </div>
+
+  <label class="chk" style="margin-top:12px;">
+    <input type="checkbox" id="tLoop"> <span>Loop continuously</span>
+  </label>
+</div>
+
+<script>
+/* ========== Tweakable defaults ========== */
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "palette": "warm",
+  "density": 120,
+  "speed": 0.7,
+  "headline": "From zeros and ones to a human gaze.",
+  "background": "#f5ece2",
+  "loop": false
+}/*EDITMODE-END*/;
+</script>
+<script src="anim.js?v=9"></script>
+
+</body>
+</html>

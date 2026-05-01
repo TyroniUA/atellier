@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atelier — We take responsibility.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #F4F2EC;
+    --bg-2: #ECE9E1;
+    --ink: #14130F;
+    --muted: #6B6A64;
+    --line: #E2DED3;
+    --rust: #C65A1E;
+    --forest: #1F6B3A;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'ss01','cv11';
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 40px;
+    background: color-mix(in oklab, var(--bg) 85%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+  .nav {
+    display: flex;
+    gap: 28px;
+  }
+  .nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color .2s ease;
+  }
+  .nav a:hover { color: var(--ink); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    min-height: calc(100vh - 61px);
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* ---------- Signing scene (background "video") ---------- */
+  .scene {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scene-camera {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    /* Camera starts zoomed IN on the signature */
+    transform: scale(3.4) translate(-6%, 12%);
+    transform-origin: 50% 55%;
+    transition: transform 1400ms cubic-bezier(.2,.7,.2,1), opacity 1200ms ease;
+    opacity: 1;
+    will-change: transform, opacity;
+  }
+  .scene-camera.pulled {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.14; /* fades under the headline */
+  }
+  .scene svg {
+    width: min(1400px, 92vw);
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 40px 60px rgba(20,19,15,0.10));
+  }
+
+  /* Signature drawing */
+  .sig-path {
+    fill: none;
+    stroke: #1a2b5c;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .sig-path.drawing {
+    stroke-dasharray: var(--len);
+    stroke-dashoffset: var(--len);
+    animation: sig-draw 1600ms cubic-bezier(.4,.1,.3,1) .15s forwards;
+  }
+  @keyframes sig-draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Pen follows the signature */
+  .pen {
+    transform-box: fill-box;
+    transform-origin: 0 100%;
+    animation: pen-move 1600ms cubic-bezier(.4,.1,.3,1) .15s forwards;
+    opacity: 0;
+  }
+  @keyframes pen-move {
+    0%   { opacity: 0; transform: translate(460px, 612px) rotate(-28deg); }
+    6%   { opacity: 1; }
+    15%  { transform: translate(500px, 598px) rotate(-28deg); }
+    32%  { transform: translate(560px, 620px) rotate(-26deg); }
+    50%  { transform: translate(640px, 602px) rotate(-28deg); }
+    70%  { transform: translate(720px, 615px) rotate(-28deg); }
+    88%  { transform: translate(800px, 600px) rotate(-30deg); }
+    100% { opacity: 0; transform: translate(860px, 585px) rotate(-34deg); }
+  }
+
+  /* Hero content sits above the scene */
+  .hero-inner, .scroll-hint { position: relative; z-index: 2; }
+
+  /* Hero content hidden during intro scene */
+  .hero-inner.hidden-intro { opacity: 0; visibility: hidden; }
+
+  /* Skip button during intro */
+  .skip {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 40;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(20,19,15,0.08);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  .skip.shown { opacity: 1; }
+
+  .hero-inner {
+    width: min(1100px, 100%);
+    text-align: center;
+    will-change: transform, opacity;
+    transition: opacity .4s ease, visibility .4s;
+  }
+
+  .headline {
+    font-family: 'Instrument Serif', 'Times New Roman', serif;
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    font-size: clamp(40px, 7.4vw, 104px);
+    margin: 0;
+    /* typing caret trails the last visible char */
+    position: relative;
+  }
+
+  .headline .line {
+    display: block;
+    white-space: nowrap;
+  }
+  .headline .rust { color: var(--rust); }
+  .headline .forest {
+    color: var(--forest);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    font-size: 0.92em;
+    text-transform: uppercase;
+  }
+
+  /* Typewriter chars - each char fades in on reveal */
+  .ch {
+    display: inline-block;
+    white-space: pre;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .05s linear, transform .12s ease-out;
+  }
+  .ch.shown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Caret */
+  .caret {
+    display: inline-block;
+    width: 2px;
+    height: 0.85em;
+    background: var(--ink);
+    vertical-align: -0.08em;
+    margin-left: 2px;
+    animation: blink 1s steps(1) infinite;
+  }
+  .caret.hidden { display: none; }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  .sub {
+    margin-top: 22px;
+    font-size: clamp(13px, 1.1vw, 15px);
+    color: var(--muted);
+    letter-spacing: 0.002em;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .sub.shown { opacity: 1; transform: translateY(0); }
+
+  .cta-row {
+    margin-top: 34px;
+    display: inline-flex;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .6s ease .1s, transform .6s ease .1s;
+  }
+  .cta-row.shown { opacity: 1; transform: translateY(0); }
+  .btn {
+    font-family: inherit;
+    font-size: 13.5px;
+    padding: 11px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--bg);
+    cursor: pointer;
+    transition: transform .15s ease, background .2s ease;
+  }
+  .btn.ghost {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  .btn:hover { transform: translateY(-1px); }
+
+  /* Replay chip */
+  .replay {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 13px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 12.5px;
+    border: 0;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .replay.shown { opacity: 1; transform: translateY(0); }
+  .replay svg { width: 13px; height: 13px; }
+
+  /* Footer hint */
+  .scroll-hint {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0;
+    transition: opacity .6s ease .3s;
+  }
+  .scroll-hint.shown { opacity: 0.7; }
+
+  /* Tweaks panel */
+  .tweaks {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 260px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    z-index: 60;
+    box-shadow: 0 10px 30px rgba(20, 19, 15, 0.08);
+    display: none;
+    font-size: 12.5px;
+  }
+  .tweaks.open { display: block; }
+  .tweaks h4 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .tweak-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0;
+    gap: 10px;
+  }
+  .tweak-row label { color: var(--ink); }
+  .tweak-row input[type="range"] { width: 120px; }
+  .tweak-row .val { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; }
+
+  @media (max-width: 640px) {
+    .topbar { padding: 14px 18px; }
+    .nav { gap: 16px; }
+    .hero { padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">Atelier</div>
+  <nav class="nav">
+    <a href="#work">Work</a>
+    <a href="#approach">Approach</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<section class="hero" data-screen-label="Hero">
+  <!-- Background "signing" scene: opens zoomed-in, then pulls back -->
+  <div class="scene" aria-hidden="true">
+    <div class="scene-camera" id="sceneCamera">
+      <svg viewBox="0 0 1200 820" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs>
+          <linearGradient id="deskGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#D9CFBE"/>
+            <stop offset="1" stop-color="#B8A88E"/>
+          </linearGradient>
+          <linearGradient id="paperGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FDFBF5"/>
+            <stop offset="1" stop-color="#F1ECDF"/>
+          </linearGradient>
+          <linearGradient id="penBody" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#1a1a1a"/>
+            <stop offset="0.5" stop-color="#3a3a3a"/>
+            <stop offset="1" stop-color="#111"/>
+          </linearGradient>
+          <filter id="paperShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+            <feOffset dx="0" dy="6" result="off"/>
+            <feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer>
+            <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Desk -->
+        <rect x="0" y="0" width="1200" height="820" fill="url(#deskGrad)"/>
+
+        <!-- Paper -->
+        <g filter="url(#paperShadow)">
+          <rect x="140" y="60" width="920" height="720" rx="2" fill="url(#paperGrad)"/>
+        </g>
+
+        <!-- Contract header -->
+        <text x="600" y="140" text-anchor="middle" font-family="'Instrument Serif', serif" font-size="34" fill="#14130F" letter-spacing="4">ENGAGEMENT AGREEMENT</text>
+        <line x1="440" y1="160" x2="760" y2="160" stroke="#14130F" stroke-width="0.8"/>
+
+        <!-- Text lines (body) -->
+        <g fill="#8a8374" opacity="0.85">
+          <rect x="200" y="200" width="800" height="4" rx="2"/>
+          <rect x="200" y="218" width="760" height="4" rx="2"/>
+          <rect x="200" y="236" width="820" height="4" rx="2"/>
+          <rect x="200" y="254" width="640" height="4" rx="2"/>
+
+          <rect x="200" y="298" width="780" height="4" rx="2"/>
+          <rect x="200" y="316" width="820" height="4" rx="2"/>
+          <rect x="200" y="334" width="720" height="4" rx="2"/>
+          <rect x="200" y="352" width="580" height="4" rx="2"/>
+
+          <rect x="200" y="396" width="800" height="4" rx="2"/>
+          <rect x="200" y="414" width="780" height="4" rx="2"/>
+          <rect x="200" y="432" width="500" height="4" rx="2"/>
+        </g>
+
+        <!-- Signature block -->
+        <text x="220" y="540" font-family="'Inter', sans-serif" font-size="14" fill="#14130F" letter-spacing="1.6">CLIENT SIGNATURE</text>
+        <line x1="220" y1="660" x2="600" y2="660" stroke="#14130F" stroke-width="1"/>
+        <text x="220" y="685" font-family="'Inter', sans-serif" font-size="11" fill="#8a8374" letter-spacing="1.4">Name</text>
+
+        <text x="700" y="540" font-family="'Inter', sans-serif" font-size="14" fill="#14130F" letter-spacing="1.6">DATE</text>
+        <line x1="700" y1="660" x2="980" y2="660" stroke="#14130F" stroke-width="1"/>
+        <text x="700" y="685" font-family="'Inter', sans-serif" font-size="11" fill="#8a8374" letter-spacing="1.4">MM / DD / YYYY</text>
+
+        <!-- Date written in -->
+        <text x="712" y="650" font-family="'Instrument Serif', cursive" font-size="22" fill="#1a2b5c" font-style="italic" opacity="0" id="dateText">04 / 17 / 2026</text>
+
+        <!-- Signature path - hand-drawn script look -->
+        <path class="sig-path drawing" id="sigPath"
+          d="M 240 640
+             C 260 615, 280 605, 300 625
+             S 340 660, 370 630
+             C 395 605, 420 610, 430 640
+             C 440 670, 460 670, 480 640
+             C 500 615, 525 620, 540 645
+             C 555 670, 580 665, 600 640
+             C 620 620, 650 615, 670 635
+             C 690 655, 720 650, 740 625
+             C 760 605, 790 610, 820 630
+             L 860 620"
+          style="--len: 900;" />
+
+        <!-- Pen -->
+        <g class="pen" id="pen">
+          <!-- barrel -->
+          <rect x="0" y="-6" width="180" height="12" rx="6" fill="url(#penBody)"/>
+          <!-- cap band -->
+          <rect x="120" y="-7" width="8" height="14" fill="#C9A24A"/>
+          <!-- nib -->
+          <polygon points="0,-4 0,4 -18,0" fill="#8a7a3a"/>
+          <polygon points="0,-2 0,2 -10,0" fill="#c9a24a"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="hero-inner hidden-intro" id="heroInner">
+    <h1 class="headline" id="headline" aria-label="We don't take clients. We take responsibility.">
+      <span class="line" data-line="0">
+        <span data-text="We don't take "></span><span class="rust" data-text="clients."></span>
+      </span>
+      <span class="line" data-line="1">
+        <span data-text="We take "></span><span class="forest" data-text="RESPONSIBILITY."></span>
+      </span>
+      <span class="caret" id="caret"></span>
+    </h1>
+    <p class="sub" id="sub">Every engagement is a long-term commitment — to your goals, your people, and your future.</p>
+    <div class="cta-row" id="cta">
+      <button class="btn">Start a conversation</button>
+      <button class="btn ghost">See our work →</button>
+    </div>
+  </div>
+  <div class="scroll-hint" id="scrollHint">Scroll</div>
+</section>
+
+<button class="skip" id="skipBtn" title="Skip intro">Skip intro ›</button>
+
+<button class="replay" id="replayBtn" title="Replay animation">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="1 4 1 10 7 10"></polyline>
+    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+  </svg>
+  Replay
+</button>
+
+<!-- Tweaks -->
+<div class="tweaks" id="tweaks">
+  <h4>Tweaks</h4>
+  <div class="tweak-row">
+    <label>Start scale</label>
+    <input id="t_startScale" type="range" min="0.2" max="0.9" step="0.05" />
+    <span class="val" id="v_startScale"></span>
+  </div>
+  <div class="tweak-row">
+    <label>Start Y (px)</label>
+    <input id="t_startY" type="range" min="0" max="600" step="10" />
+    <span class="val" id="v_startY"></span>
+  </div>
+  <div class="tweak-row">
+    <label>Type speed</label>
+    <input id="t_typeMs" type="range" min="10" max="90" step="2" />
+    <span class="val" id="v_typeMs"></span>
+  </div>
+  <div class="tweak-row">
+    <label>Spring stiffness</label>
+    <input id="t_stiff" type="range" min="80" max="260" step="5" />
+    <span class="val" id="v_stiff"></span>
+  </div>
+  <div class="tweak-row">
+    <label>Spring damping</label>
+    <input id="t_damp" type="range" min="6" max="30" step="1" />
+    <span class="val" id="v_damp"></span>
+  </div>
+  <div class="tweak-row">
+    <label>Type then spring</label>
+    <input id="t_order" type="checkbox" />
+  </div>
+</div>
+
+<script>
+  /* ---------- Tweakable defaults ---------- */
+  const TWEAKS = /*EDITMODE-BEGIN*/{
+    "startScale": 0.2,
+    "startY": 140,
+    "typeMs": 32,
+    "springStiffness": 145,
+    "springDamping": 14,
+    "typeThenSpring": false
+  }/*EDITMODE-END*/;
+
+  /* ---------- Char splitter ---------- */
+  function splitChars() {
+    const nodes = document.querySelectorAll('[data-text]');
+    const order = [];
+    nodes.forEach(node => {
+      const text = node.getAttribute('data-text');
+      node.textContent = '';
+      for (const c of text) {
+        const s = document.createElement('span');
+        s.className = 'ch';
+        s.textContent = c;
+        node.appendChild(s);
+        order.push(s);
+      }
+    });
+    return order;
+  }
+
+  /* ---------- Spring animation on transform ---------- */
+  // Critically damped-ish spring integrator. We animate scale + translateY of the whole block.
+  function springTo(el, { from, to, stiffness, damping, onDone }) {
+    // from/to: { scale, y }
+    let { scale: s, y } = from;
+    let vs = 0, vy = 0;
+    const target = to;
+    const dt = 1 / 60;
+    let last = performance.now();
+    let running = true;
+
+    function step(now) {
+      if (!running) return;
+      // Fixed-step for stability
+      let acc = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      while (acc > 0) {
+        const h = Math.min(dt, acc);
+        acc -= h;
+        // spring: a = -k*(x - target) - c*v
+        const as = -stiffness * (s - target.scale) - damping * vs;
+        const ay = -stiffness * (y - target.y) - damping * vy;
+        vs += as * h;
+        vy += ay * h;
+        s += vs * h;
+        y += vy * h;
+      }
+      el.style.transform = `translateY(${y.toFixed(2)}px) scale(${s.toFixed(4)})`;
+      const settled =
+        Math.abs(s - target.scale) < 0.0008 &&
+        Math.abs(y - target.y) < 0.2 &&
+        Math.abs(vs) < 0.002 &&
+        Math.abs(vy) < 0.2;
+      if (settled) {
+        el.style.transform = `translateY(${target.y}px) scale(${target.scale})`;
+        running = false;
+        onDone && onDone();
+        return;
+      }
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+    return () => { running = false; };
+  }
+
+  /* ---------- Sequence ---------- */
+  const hero = document.getElementById('heroInner');
+  const caret = document.getElementById('caret');
+  const sub = document.getElementById('sub');
+  const cta = document.getElementById('cta');
+  const scrollHint = document.getElementById('scrollHint');
+  const replayBtn = document.getElementById('replayBtn');
+  const sceneCamera = document.getElementById('sceneCamera');
+  const sigPath = document.getElementById('sigPath');
+  const pen = document.getElementById('pen');
+  const dateText = document.getElementById('dateText');
+  const skipBtn = document.getElementById('skipBtn');
+
+  let chars = [];
+  let cancelSpring = null;
+  let typingTimer = null;
+  let sceneTimers = [];
+
+  function reset() {
+    if (cancelSpring) cancelSpring();
+    if (typingTimer) clearTimeout(typingTimer);
+    sceneTimers.forEach(clearTimeout); sceneTimers = [];
+
+    // Re-split (in case DOM was mutated) — safe to just re-init once
+    if (chars.length === 0) chars = splitChars();
+    chars.forEach(c => c.classList.remove('shown'));
+    caret.classList.remove('hidden');
+    sub.classList.remove('shown');
+    cta.classList.remove('shown');
+    scrollHint.classList.remove('shown');
+    replayBtn.classList.remove('shown');
+    skipBtn.classList.remove('shown');
+
+    // Hide hero content during intro
+    hero.classList.add('hidden-intro');
+
+    // Reset scene camera to zoomed-in
+    sceneCamera.classList.remove('pulled');
+
+    // Restart signature draw by cloning the node (resets animation)
+    const fresh = sigPath.cloneNode(true);
+    sigPath.parentNode.replaceChild(fresh, sigPath);
+    window._sigPath = fresh;
+    const freshPen = pen.cloneNode(true);
+    pen.parentNode.replaceChild(freshPen, pen);
+    window._pen = freshPen;
+    dateText.style.opacity = 0;
+
+    // Initial transform: small + down
+    hero.style.transition = 'none';
+    hero.style.transform = `translateY(${TWEAKS.startY}px) scale(${TWEAKS.startScale})`;
+  }
+
+  function placeCaretAfter(el) {
+    // move caret DOM node immediately after the given char
+    if (!el) return;
+    el.parentNode.insertBefore(caret, el.nextSibling);
+  }
+
+  function typeChars(done) {
+    let i = 0;
+    function next() {
+      if (i >= chars.length) {
+        done && done();
+        return;
+      }
+      const ch = chars[i];
+      ch.classList.add('shown');
+      placeCaretAfter(ch);
+      i++;
+      typingTimer = setTimeout(next, TWEAKS.typeMs);
+    }
+    next();
+  }
+
+  const INTRO_MS = 2000; // signing scene duration before pullback
+
+  function runSequence() {
+    reset();
+
+    // Show skip button during intro
+    sceneTimers.push(setTimeout(() => skipBtn.classList.add('shown'), 250));
+    // Fade in date text mid-intro
+    sceneTimers.push(setTimeout(() => { dateText.style.transition = 'opacity .4s ease'; dateText.style.opacity = 1; }, 1100));
+
+    // After INTRO_MS, pull the camera back + start headline animation
+    sceneTimers.push(setTimeout(() => {
+      sceneCamera.classList.add('pulled');
+      skipBtn.classList.remove('shown');
+      hero.classList.remove('hidden-intro');
+      startHeadline();
+    }, INTRO_MS));
+  }
+
+  function startHeadline() {
+    const springOpts = {
+      from: { scale: TWEAKS.startScale, y: TWEAKS.startY },
+      to: { scale: 1, y: 0 },
+      stiffness: TWEAKS.springStiffness,
+      damping: TWEAKS.springDamping,
+    };
+
+    if (TWEAKS.typeThenSpring) {
+      // Type first (while small & low), THEN spring up.
+      typeChars(() => {
+        cancelSpring = springTo(hero, {
+          ...springOpts,
+          onDone: finish
+        });
+      });
+    } else {
+      // Spring + type concurrently — the requested feel.
+      cancelSpring = springTo(hero, {
+        ...springOpts,
+        onDone: () => { /* keep typing */ }
+      });
+      // Start typing just slightly after spring kicks off
+      setTimeout(() => typeChars(finish), 120);
+    }
+  }
+
+  function finish() {
+    // Hide caret after a beat, reveal sub + cta
+    setTimeout(() => caret.classList.add('hidden'), 700);
+    sub.classList.add('shown');
+    cta.classList.add('shown');
+    scrollHint.classList.add('shown');
+    replayBtn.classList.add('shown');
+  }
+
+  replayBtn.addEventListener('click', runSequence);
+  skipBtn.addEventListener('click', () => {
+    sceneTimers.forEach(clearTimeout); sceneTimers = [];
+    sceneCamera.classList.add('pulled');
+    skipBtn.classList.remove('shown');
+    hero.classList.remove('hidden-intro');
+    startHeadline();
+  });
+
+  // Honor reduced motion
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.addEventListener('load', () => {
+    if (prefersReduced) {
+      chars = splitChars();
+      chars.forEach(c => c.classList.add('shown'));
+      hero.style.transform = 'none';
+      hero.classList.remove('hidden-intro');
+      sceneCamera.classList.add('pulled');
+      caret.classList.add('hidden');
+      finish();
+    } else {
+      runSequence();
+    }
+  });
+
+  /* ---------- Tweaks UI ---------- */
+  const tweaksEl = document.getElementById('tweaks');
+  const bindings = [
+    ['t_startScale', 'v_startScale', 'startScale', v => (+v).toFixed(2)],
+    ['t_startY', 'v_startY', 'startY', v => `${+v}`],
+    ['t_typeMs', 'v_typeMs', 'typeMs', v => `${+v}ms`],
+    ['t_stiff', 'v_stiff', 'springStiffness', v => `${+v}`],
+    ['t_damp', 'v_damp', 'springDamping', v => `${+v}`],
+  ];
+
+  function syncTweakUI() {
+    bindings.forEach(([ti, vi, key, fmt]) => {
+      const input = document.getElementById(ti);
+      input.value = TWEAKS[key];
+      document.getElementById(vi).textContent = fmt(TWEAKS[key]);
+    });
+    document.getElementById('t_order').checked = !!TWEAKS.typeThenSpring;
+  }
+
+  bindings.forEach(([ti, vi, key, fmt]) => {
+    const input = document.getElementById(ti);
+    input.addEventListener('input', () => {
+      TWEAKS[key] = +input.value;
+      document.getElementById(vi).textContent = fmt(input.value);
+      persist({ [key]: TWEAKS[key] });
+    });
+    input.addEventListener('change', runSequence);
+  });
+  document.getElementById('t_order').addEventListener('change', e => {
+    TWEAKS.typeThenSpring = e.target.checked;
+    persist({ typeThenSpring: TWEAKS.typeThenSpring });
+    runSequence();
+  });
+
+  function persist(edits) {
+    try {
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    } catch (_) {}
+  }
+
+  // Edit-mode host protocol
+  window.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if (d.type === '__activate_edit_mode') {
+      syncTweakUI();
+      tweaksEl.classList.add('open');
+    } else if (d.type === '__deactivate_edit_mode') {
+      tweaksEl.classList.remove('open');
+    }
+  });
+  try {
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  } catch (_) {}
+</script>
+</body>
+</html>

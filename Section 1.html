@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Section 1</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f5ece2;
+    --ink:       #1c140e;
+    --ink-soft:  #5b4637;
+    --accent-1:  #e8693c;
+    --rule:      rgba(28,20,14,0.14);
+  }
+  html, body { margin:0; padding:0; background: var(--bg); color: var(--ink); font-family: 'Instrument Serif', serif; }
+  body { min-height: 100vh; }
+
+  .stage {
+    position: relative;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+  }
+
+  .rail {
+    position: absolute; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+  .rail.top { top: 0; border-bottom: 1px solid var(--rule); }
+  .rail.bot { bottom: 0; border-top: 1px solid var(--rule); }
+  .rail .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-1);
+    display: inline-block; margin-right: 8px; vertical-align: middle;
+  }
+
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(40px, 6vw, 96px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-align: center;
+    margin: 0;
+    max-width: 20ch;
+    text-wrap: balance;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="rail top">
+    <div><span class="dot"></span>Section 01</div>
+    <div>01001000 · 01101001</div>
+  </div>
+
+  <h1>We build AI, Cybersecurity, Trust, Relationships.</h1>
+
+  <div class="rail bot">
+    <div>stage · text</div>
+    <div>Warm / 0.1</div>
+  </div>
+</div>
+
+</body>
+</html>
