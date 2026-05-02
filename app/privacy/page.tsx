@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           <section>
             <h2>1. Introduction</h2>
             <p>
-              Atelier ("we", "us", or "our") is committed to protecting your personal data and
+              Atelier (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) is committed to protecting your personal data and
               respecting your privacy. This Privacy Policy explains what information we collect,
               how we use it, and your rights in relation to it when you visit our website or engage
               our services.
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
           <section>
             <h2>11. Changes to This Policy</h2>
             <p>
-              We may update this Privacy Policy from time to time. The "Last updated" date at the
+              We may update this Privacy Policy from time to time. The &ldquo;Last updated&rdquo; date at the
               top of this page indicates when the policy was last revised. Continued use of our
               website after any changes constitutes acceptance of the updated policy.
             </p>
