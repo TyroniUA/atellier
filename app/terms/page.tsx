@@ -27,8 +27,8 @@ export default function TermsPage() {
           <section>
             <h2>1. Agreement to Terms</h2>
             <p>
-              By engaging Atelier ("we", "us", or "our") for design, strategy, or related creative
-              services, you ("Client") agree to be bound by these Terms &amp; Conditions. Please
+              By engaging Atelier (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) for design, strategy, or related creative
+              services, you (&ldquo;Client&rdquo;) agree to be bound by these Terms &amp; Conditions. Please
               read them carefully before proceeding. If you do not agree, do not engage our
               services.
             </p>
@@ -116,7 +116,7 @@ export default function TermsPage() {
           <section>
             <h2>8. Termination</h2>
             <p>
-              Either party may terminate the engagement with 14 days' written notice. In the event
+              Either party may terminate the engagement with 14 days&apos; written notice. In the event
               of termination, the Client is liable for all work completed up to the date of
               termination. Any deposit paid is non-refundable unless Atelier is unable to deliver
               the agreed work.
@@ -126,7 +126,7 @@ export default function TermsPage() {
           <section>
             <h2>9. Limitation of Liability</h2>
             <p>
-              Atelier's total liability under any engagement shall not exceed the total fees paid
+              Atelier&apos;s total liability under any engagement shall not exceed the total fees paid
               by the Client for that specific project. We are not liable for any indirect,
               incidental, or consequential damages arising from the use or inability to use the
               deliverables.
