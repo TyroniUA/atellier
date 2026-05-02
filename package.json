@@ -10,10 +10,14 @@
   },
   "dependencies": {
     "flubber": "^0.4.2",
+    "g": "^2.0.1",
     "motion": "^12.38.0",
     "next": "^15.3.0",
+    "posthog-js": "^1.372.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "resend": "^6.12.2",
+    "vercel": "^53.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",

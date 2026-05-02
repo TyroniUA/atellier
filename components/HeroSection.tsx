@@ -145,7 +145,7 @@ export function HeroSection() {
         </div>
         <div className={`${styles.rail} ${styles.railBot}`}>
           <div ref={railStageRef}>stage · intro</div>
-          <div>Warm / 0.1</div>
+          {/* <div>Warm / 0.1</div> */}
         </div>
 
         <div ref={rightSlotRef} className={styles.rightSlot} aria-hidden="true">

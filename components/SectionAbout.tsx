@@ -5,15 +5,18 @@ import styles from "./SectionAbout.module.css";
 
 const PARTNERS = [
   {
-    name: "Elena Voss",
-    role: "Systems & trust",
+    name: "Volodymyr",
+    role: "Tech to trust",
     bio: "Turns fragile ideas into agreements you can stand behind — security, governance, and the human cost of both.",
+    portraitClass: "volodymyr",
   },
   {
-    name: "Marcus Iyer",
-    role: "Product & craft",
+    name: "Conrad",
+    role: "Ideas to products",
     bio: "Builds interfaces that feel inevitable: quiet typography, honest motion, and room for the relationship to grow.",
+    portraitClass: "conrad",
   },
+
 ] as const;
 
 export function SectionAbout() {
@@ -44,7 +47,20 @@ export function SectionAbout() {
               className={`${styles.bio} ${revealed ? styles.bioVisible : ""}`}
               style={{ transitionDelay: revealed ? `${120 + i * 100}ms` : undefined }}
             >
-              <div className={styles.portrait} aria-hidden="true" />
+              <div className={styles.flipCard} aria-hidden="true">
+                <div className={styles.flipInner}>
+                  <div
+                    className={`${styles.flipFace} ${styles.flipFront} ${
+                      p.portraitClass === "conrad" ? styles.portraitConrad : styles.portraitVolodymyr
+                    }`}
+                  />
+                  <div
+                    className={`${styles.flipFace} ${styles.flipBack} ${
+                      p.portraitClass === "conrad" ? styles.portraitConradReal : styles.portraitVolodymyrReal
+                    }`}
+                  />
+                </div>
+              </div>
               <div className={styles.bioBody}>
                 <h3>{p.name}</h3>
                 <p className={styles.role}>{p.role}</p>
@@ -57,7 +73,7 @@ export function SectionAbout() {
 
       <div className={`${styles.rail} ${styles.railBot}`}>
         <div>stage · about</div>
-        <div>Warm / 0.1</div>
+        {/* <div>Warm / 0.1</div> */}
       </div>
     </section>
   );

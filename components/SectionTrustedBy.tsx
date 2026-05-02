@@ -176,8 +176,8 @@ export function SectionTrustedBy() {
       </div>
 
       <div className={`${styles.rail} ${styles.railBot}`}>
-        <div>stage · trust</div>
-        <div>Warm / 0.1</div>
+        {/* <div>stage · trust</div> */}
+        {/* <div>Warm / 0.1</div> */}
       </div>
     </section>
   );

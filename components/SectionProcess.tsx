@@ -57,7 +57,7 @@ export function SectionProcess() {
 
       <div className={`${styles.rail} ${styles.railBot}`}>
         <div>stage · process</div>
-        <div>Warm / 0.1</div>
+        {/* <div>Warm / 0.1</div> */}
       </div>
     </section>
   );

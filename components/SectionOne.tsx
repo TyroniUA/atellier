@@ -124,7 +124,7 @@ export function SectionOne() {
 
         <div className={`${styles.rail} ${styles.railBot}`}>
           <div>stage · text</div>
-          <div>Warm / 0.1</div>
+          {/* <div>Warm / 0.1</div> */}
         </div>
       </div>
     </section>

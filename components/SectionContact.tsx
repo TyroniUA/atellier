@@ -1,25 +1,51 @@
 "use client";
 
-import { type FormEvent, useCallback } from "react";
+import { type FormEvent, useCallback, useState } from "react";
+import posthog from "posthog-js";
 import { useReveal } from "@/lib/use-reveal";
 import styles from "./SectionContact.module.css";
 
 const CONTACT_EMAIL = "hello@atelier.studio";
 
+type Status = "idle" | "sending" | "sent" | "error";
+
 export function SectionContact() {
   const { ref, revealed } = useReveal();
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const onSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
+  const onSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const fd = new FormData(form);
-    const from = String(fd.get("email") ?? "").trim();
+    const email = String(fd.get("email") ?? "").trim();
     const message = String(fd.get("message") ?? "").trim();
-    const subject = encodeURIComponent("Note from the landing");
-    const body = encodeURIComponent(
-      [from ? `From: ${from}` : "From: (not provided)", "", message || "(no message)"].join("\n"),
-    );
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+    const company = String(fd.get("company") ?? "");
+
+    setStatus("sending");
+    setErrorMsg("");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, message, company }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setStatus("error");
+        setErrorMsg(data.error || "Could not send. Try again.");
+        return;
+      }
+      setStatus("sent");
+      form.reset();
+      if (typeof posthog !== "undefined" && posthog.__loaded) {
+        posthog.capture("contact_form_submitted");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Network error. Try again.");
+    }
   }, []);
 
   return (
@@ -57,6 +83,7 @@ export function SectionContact() {
               name="email"
               autoComplete="email"
               placeholder="you@example.com"
+              required
             />
           </div>
           <div>
@@ -69,23 +96,49 @@ export function SectionContact() {
               name="message"
               placeholder="A line or two is enough to start."
               rows={5}
+              required
             />
           </div>
-          <button type="submit" className={styles.submit}>
-            Send
+          <input
+            type="text"
+            name="company"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "-10000px",
+              width: 1,
+              height: 1,
+              opacity: 0,
+            }}
+          />
+          <button
+            type="submit"
+            className={styles.submit}
+            disabled={status === "sending" || status === "sent"}
+          >
+            {status === "sending" ? "Sending…" : status === "sent" ? "Sent" : "Send"}
           </button>
-          <p className={styles.hint}>
-            Opens your mail app —{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "inherit" }}>
-              {CONTACT_EMAIL}
-            </a>
+          <p className={styles.hint} role="status" aria-live="polite">
+            {status === "sent" ? (
+              <>Thanks — we&rsquo;ll be in touch.</>
+            ) : status === "error" ? (
+              <>{errorMsg}</>
+            ) : (
+              <>
+                Goes straight to{" "}
+                <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "inherit" }}>
+                  {CONTACT_EMAIL}
+                </a>
+              </>
+            )}
           </p>
         </form>
       </div>
 
       <div className={`${styles.rail} ${styles.railBot}`}>
         <div>stage · contact</div>
-        <div>Warm / 0.1</div>
       </div>
     </section>
   );

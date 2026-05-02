@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { PHProvider } from "./providers";
 
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -50,7 +51,9 @@ export default function RootLayout({
       lang="en"
       className={`${instrumentSerif.variable} ${jetbrainsMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <PHProvider>{children}</PHProvider>
+      </body>
     </html>
   );
 }

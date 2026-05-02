@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./SiteFooter.module.css";
 
 const YEAR = new Date().getFullYear();
@@ -9,6 +10,11 @@ const SITEMAP = [
   { href: "#process", label: "Process" },
   { href: "#about", label: "About" },
   { href: "#contact", label: "Contact" },
+] as const;
+
+const LEGAL = [
+  { href: "/terms", label: "Terms & Conditions" },
+  { href: "/privacy", label: "Privacy Policy" },
 ] as const;
 
 export function SiteFooter() {
@@ -47,10 +53,25 @@ export function SiteFooter() {
             </a>
           </div>
         </div>
+
+        <nav aria-label="Legal">
+          <p className={styles.colTitle}>Legal</p>
+          <div className={styles.nav}>
+            {LEGAL.map((item) => (
+              <Link key={item.href} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
       </div>
 
       <div className={styles.bottom}>
         <span>© {YEAR} Atelier</span>
+        <div className={styles.bottomLinks}>
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
+        </div>
         <span className={styles.binary} aria-hidden="true">
           01001000 · 01101001
         </span>
